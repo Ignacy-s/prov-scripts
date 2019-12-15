@@ -1,0 +1,536 @@
+on. 20. nov. 21:44:34 +0100 2019
+Wed 04 Dec 2019 11:26:22 AM CET
+
+
+After moving everything to the nvme ssd the VM files got erased. Next
+time I will back them up too.
+
+VMs have to get recreated, so that I can have the fleet to work
+with. Some work was done already as the Vagrant files were saved. It's
+a pity that they only contained info about hostnames and IPs. I've
+modified provisioning script inside Vagrantfile to run `yum update -y`
+to ugprade the VMs to the latest version of all software. Can't trust
+the network with the smart TV on it.
+
+Osticket VM has gone trough the recreation process and already had a
+provisioning script created. The script downloaded the osticket app,
+set it up, including a pause to finish the installation trough a web
+browser. Not sure if the script configured postfix properly, this
+needs to be verified. 
+
+* DONE Osticket
+  CLOSED: [2019-11-23 lø. 16:39]
+** Check if postfix works. Upgrade the script, so it can be reused.
+** Trying changing the owner of /etc/postfix to postfix
+https://serverfault.com/a/463770
+This answer suggests, that the problem is caused by postfix not owning
+the postfix directory.
+
+Trying to fix it with sudo chown postfix /etc/postfix
+
+The postmap command worked.
+
+Email got sent sucessfully, though it required extra work on blur page
+to get it, and then another extra resend to the gmail account.
+
+** sasl_passwd.db file still contains the password.
+  <Ignacy> I'm trying to configure postfix to use a password hash (.db
+file) to authenticate with 3rd party smpt provider. I've looked at
+hash created with postmap command, and except for hash it still
+contains cleartext password at the end of the hash. Is that supposed
+to be like that? If someone is to get root access to the machine he
+can still read my 3rd party mail provider password.
+  <ryuo> Ignacy:
+... password hashs don't work when you have to provide the password to
+an external party for authentication purposes.
+  <ryuo> Ignacy: they're
+only good for when you only need to store them for your authentication
+purposes.
+  <ryuo> Ignacy: welcome to the limitations of encyption.
+  <ryuo> automated tools rarely have a good way to store authentication
+secrets; you usually have to store them in a secure manner but can't
+eliminate disclosure entirely.
+  <ryuo> usually this means putting them
+in a file that most cannot access.
+  <ryuo> not storing it in revision
+control system
+  <ryuo> etc
+* DONE Kanboard
+  CLOSED: [2019-11-23 lø. 18:05]
+** See where the provisioning script can be modified and modify it.
+Parts like installing MariaDB and securing it, and also postfix
+configuration, can surely be reused. Kanboard specific settings have
+to be modified.
+** Edit the script to use some variables and modify it along project.pdf
+
+Final version of the script in a new submenu.
+It "mostly" works, except for the mysql_secure_installation, not sure
+of that.
+And it's not indempotent. This fancy word I've learned from the
+beggining of Ansible book by James Turnbul. It is an idea, that
+commands run against a server should work the first time they are run
+(like my script) but also second and any other. We should really
+declare a state we expect, not the actions.
+
+This script is not indempotent. While debugging, I've run it several
+times. Some commands, like yum, worked several times, without giving
+errors (as there were no errors if the packages were installed, the
+result was correct - required packages were on the system). Other
+commands had to be commented (#) out, or else script would stop (used
+set -e to make it stop in case something didn't work). There should
+probably be checks and conditionals connected with them to avoid
+running actions that have already been run. I'm not sure if it's worth
+detouring for that, I will most likely learn how to do all these
+things with ansible, which is better suited for indempotent
+configuration management.
+
+*** Script in the final form, it most likely works.
+
+#! /bin/bash
+# Moved Vagrant files which messed up osticket project.
+# Extracting history to make a provisioning script.
+set -e
+sudo yum update -y 
+
+# Installing Apache
+sudo yum install -y httpd php php-mysql 
+sudo yum install -y php-gd php-xml php-mbstring
+
+sudo systemctl enable --now httpd
+
+# DB
+DBNAME=kanboard
+DBUSER=kanboard
+DBUSER_PASSWD=kanboard123
+sudo yum install -y mariadb-server && sudo systemctl enable --now mariadb
+echo -e '\n\nroot123\nroot123\n\n\n\n' | sudo mysql_secure_installation 
+sudo mysqladmin -u root -proot123 create $DBNAME
+sudo mysql -u root -proot123 -D $DBNAME -e "grant all on ${DBNAME}.* to ${DBUSER}@localhost identified by '${DBUSER_PASSWD}' ; flush privileges;"
+
+# Files
+curl -LO http://mirror.linuxtrainingacademy.com/kanboard/kanboard-v1.0.34.zip
+unzip kanboard-v1.0.34.zip
+sudo mv kanboard/* /var/www/html
+ls -l /var/www/html
+#Tell the app how to connect to database
+sudo tee -a /var/www/html/config.php <<EOF
+<?php
+define('DB_DRIVER', 'mysql');
+define('DB_USERNAME', 'kanboard');
+define('DB_PASSWORD', 'kanboard123');
+define('DB_HOSTNAME', 'localhost');
+define('DB_NAME', 'kanboard');
+EOF
+
+# postfix
+sudo yum install cyrus-sasl-plain -y #SASL auth lib
+sudo cp /etc/postfix/main.cf /etc/postfix/main.cf.orig
+sudo tee -a /etc/postfix/main.cf <<EOF
+"smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+smtp_sasl_tls_security_options = noanonymous
+smtp_tls_security_level = encrypt
+header_size_limit = 4096000
+relayhost = [smtp.sendgrid.net]:587"
+EOF
+sudo cp /vagrant/sasl_passwd /etc/postfix/sasl_passwd
+sudo chmod 600 /etc/postfix/sasl_passwd
+sudo postmap /etc/postfix/sasl_passwd
+sudo systemctl restart postfix.service
+sudo rm -f /etc/postfix/sasl_passwd
+   
+* DONE Fxing Vagrant ssh error
+  CLOSED: [2019-12-03 Tue 10:11]
+It took me a long time to fix. There was a change in the configuration
+of the /etc/ssh/ssh_config file. This file is responsible for the
+default settings of the ssh CLIENT. At the bottom of the file there
+was an extra line GSSAPIauth yes, which enabled some kerberos style
+authentication.
+
+This modification stood out, being at the end of the file. It lacked a
+proper comment with date and name of the administrator modifying the
+file. There could also have been a comment about why the change was
+made. To further prevent such errors there will be made a
+"maintenance.org" file, where I will document changes to my personal
+computer.
+
+Even though the change was easy to notice, first attempt to verify if
+this was the reason of problems failed. After modyfing the file I've
+reloaded the sshD deamon. This was an error. Problem ocurred when
+logging from the machine, not into it. That meant that the program
+managing connections from the machine was at fault, ssh client, not
+the program managing incoming connections, the ssh daemon.
+systemctl restart sshd.service reloaded files working with the
+daemon. The ssh.service should've been restarted/reloaded instead.
+
+After getting frustrated I've started digging at the problem and
+stopped taking regular brakes and documenting tried solutions. Being
+tired and not documenting what I've been doing might have added to the
+reasons why the error took couple days to fix.
+* Icinga
+With icinga not only the web-app has to be installed, but also other
+VMs have to be configured to feed Icinga with data. 
+** Install Icinga server and web-app.
+*** Renamed the provisioning script to icinga
+*** modified the script to use the mysql .sql script to secure the database
+sudo mysql -uroot < mysql_secure_installation.sql
+*** Added PHP support (learned from icinga docs)
+Looks like there is an easier way to get icinga supported with the
+required PHP packages, and that's the way that the application expects
+from server.
+https://icinga.com/docs/icingaweb2/latest/doc/02-Installation/#installation
+
+yum install centos-release-scl
+
+*** Modified the script to use the right php packages
+sudo yum install -y httpd php php-gd php-intl php-ldap \
+     php-ZendFramework php-ZendFramework-Db-Adapter-Pdo\
+     -Mysql php-pecl-imagick
+*** Added PHP configuration
+What I like here is that the script will create a different php.ini
+backup file for each minute after the beggining of current epoch 1st
+Jan 1970.
+
+sudo cp /etc/php.ini /etc/php.ini.bak-$(($(date +%s)/60))
+echo "date.timezone = \"Europe/Oslo\"" | sudo tee -a /etc/php.ini
+
+**** To avoid having an extra line with timezone
+After each run of the script, I will check if the line is present, and
+only run the modification if the line is missing from the
+configuration file.
+
+***** Check if the line is there
+grep -q 'date.timezone = "Europe/Oslo"' /etc/php.ini
+
+***** Put it in an if statement
+I've spent one (edit: several) pomodoro reading on if statements from:
+about:reader?url=https%3A%2F%2Fmywiki.wooledge.org%2FBashGuide%2FTestsAndConditionals
+
+
+if [ ! $(grep -q 'date.timezone = "Europe/Oslo"' /etc/php.ini) ]
+then {
+sudo cp -v /etc/php.ini /etc/php.ini.bak-$(($(date +%s)/60))
+echo "date.timezone = \"Europe/Oslo\"" | sudo tee -a /etc/php.ini
+}
+else echo "Timezone already set."
+fi
+
+*** Securing MariDB installation
+Script is `set -e` so it would stop execution when it encounters
+erros, so that the script wouldn't run amok when the inevitable bug
+will find it's way into it.
+Since running the script for a second time would cause an error which
+would stop the script execution, I asked on #bash for a way to stop it
+for a moment. Ofcourse instead of giving an advice I was pointed to a
+faq page that existed on this topic:
+https://mywiki.wooledge.org/BashFAQ/105
+
+
+**** So this is why set -e shouldn't be used in real scripts:
+# set -e; true && (echo "hi"; exit 17); echo "I live, and exit status
+# is $?"
+
+set -e will go bonkers when using a subshell. It's ok for the
+debugging a non production script, but production stuff will likely
+start using subshells at some point. Better to catch errors in another
+way.
+**** I'll just use the example of what's not supposed to be used, as quoted
+here:
+But, if you're a certain type of person, maybe you think it's OK to
+use set -e as long as you remember that you have to put "|| true" after
+every single arithmetic command, and so on, and so on.
+**** || true will stop set -e from stopping the script
+
+*** Create Databases
+Here I'm sending a heredocs as input to mysql -u root
+sudo mysq -v -u root -proot123 <<EOF
+create database if not exists icinga;
+create database if not exists icingaweb;
+EOF
+
+*** Create DB Users
+
+Just copied the same thing twice, but replaces variables :D
+DBNAME=icinga
+DBUSER=icinga
+DBUSER_PASSWD=icinga123
+sudo mysql -v -u root -proot123 -D $DBNAME -e \
+     "grant all on ${DBNAME}.* to ${DBUSER}@localhost identified\
+ by '${DBUSER_PASSWD}' ; "
+
+DBNAME=icingaweb
+
+DBUSER=icingaweb
+DBUSER_PASSWD=icingaweb123
+sudo mysql -v -u root -proot123 -D $DBNAME -e \
+     "grant all on ${DBNAME}.* to ${DBUSER}@localhost identified\
+ by '${DBUSER_PASSWD}' ; flush privileges;"
+
+*** Configure Icinga repository
+sudo yum install -y \
+     http://mirror.linuxtrainingacademy.com/icinga/icinga-rpm-release-7\
+     -1.el7.centos.noarch.rpm
+*** Install Icinga
+sudo yum install -y icinga2 icingaweb2 icingacli icinga2-ido-mysql
+*** Configure Icinga Database
+To avoid re-running the .sql we count the lines in mysqlshow output.
+
+if [ $(mysqlshow -u root -proot123 icinga | wc -l) -eq 5 ]
+then
+mysql -v -u root -proot123 icinga < /usr/share/icinga2-ido-mysql/schema/mysql.sql
+elif [ $(mysqlshow -u root -proot123 icinga | wc -l) -eq 66 ]
+then {
+echo "Database already initialized"
+sleep 1;}
+else {
+echo "Database length neither 5 or 66, something's wrong?"
+exit 1
+}
+fi
+
+*** Tell icinga how to connect to the database (and cool SED stuff)
+The file /etc/icinga2/features-available/ido-mysql.conf should be
+edited. First, the leading forward slashes have to be removed. Then,
+the password should be changed from icinga to icinga123.
+
+Had to use Extended Regular Expressions in sed to allow alteration.
+***** Script:
+mystring="password = \"icinga123\""
+my_url="/etc/icinga2/features-available/ido-mysql.conf"
+if [ $(grep -c "$mystring" "$my_url" ) -lt 1 ]
+then {
+sudo sed -E -i.bak-$(($(date +%s)/60)) -e '/\/\/(us|pa|ho|da)/s/\/\///' -e '/password/s/inga/inga123/'
+}
+else echo "DB password in icinga already set."
+fi
+***** Sed -i option:
+Here there is a fancy usage of sed -i option, that creates backup
+files that change it's name every minute. Just to avoid the case, when
+we create a backup of a botched file that would replace the good
+backup.
+***** Sed -E option:
+Another new sed option is -E which turns on Extended Regular
+Expressions. In contrast to Basic Regular Expressions, BRE, ERE allow
+using alteration like (this|or|that). This way we limit number of
+affected lines to those that were originally meant to be modified.
+***** Sed -e option:
+-e option just allows to put many sed expressions inside of a one sed
+call. 
+
+
+*** Allow commands to be received by the web front end
+Icinga is modular, so you can enable different modules, which they
+call features. We want to enable the "command" feature so the web
+front end can send commands to Icinga such as acknowledging service
+and host problems. We can verify running modules with feature list command:
+**** sudo icinga2 feature enable command
+**** sudo icinga2 feature list
+
+*** Install Monitoring Plugins
+After installing the service, we want to monitor hosts and apps.
+Because Icinga is a fork of Nagios, we can use it's monitoring
+plugins. 
+sudo yum install -y nagios-plugins-all
+
+*** Prepare the Server for Clients
+This process has to be completed once if you will be using an Icinga
+client installed locally on the machines you plan to monitor.
+
+To prepare this server for that purpose we will run the node
+wizard. This is master setup, therefore we answer 'n' to the first
+question and then accept defaults by pressing enter for the following
+questions.
+
+sudo icinga2 node wizard <<EOF
+n
+
+
+
+EOF
+
+*** Configure the Web Front-End
+Here we have to get a token and use web browser to configure the Web
+Front-End. I will copy wait option from osticket script.
+
+# here you use the browser to configurate the app
+read -n1 -r -p "Open http://10.23.45.30/icingaweb2/setup. Press space to continue..." key
+echo "$key" # to avoid wrath of the linter program
+
+*** Need to configure php-fpm and change some stuff.
+After icinga upgraded itself to 2.11, there are some issues. The line
+enabling the scl repository is not enough :(
+
+
+** Configure other VMs to feed data into Icinga 
+
+* Time to create two versions of the script - 2.4 and 2.11 (2.4 can wait)   
+** Learning Git basics to put scripts in a repo
+I've learned basics of git. It's actually quite simple the n-th time
+you are learning it.
+
+Usage of git (learned from ULSAH), when using a local repo, can be
+limited to a few commands.
+*** git init
+To initialize the directory we are in as a repo (creates index and
+such)
+*** git add .
+To add all files inside the local folder (that have changed) to the
+next commit. These files sit in index and can be viewed with
+*** git status
+That will show what is in local file, what is prepared to be committed
+and what will not be committed.
+*** git commit [-m commit_message]
+Will commit the indexed changes into the repo, eventually supplying a
+comment.
+** Debugging .gitignore
+*** git check-ignore -n -v $filename
+This allows us to check for why is specific file ignored. It gives us
+the source of the rule applied in ignoring the file.
+*** git init has to be run AFTER creating .gitignore
+Learned from stack overflow. There were many people with the same
+problem.
+*** global .gitignore file
+https://simpleit.rocks/git/make-git-ignore-temporary-files-produced-by-emacs-and-vim-in-all-directories-globally/
+A global git ignore file might work too. remember to initialize it
+first with `git config --global core.excludesfile ~/.gitignore_global`
+** Learning to use git with a remote repo.
+
+* Extras
+** Forgot, that to connect to a remote server
+with emacs tramp and then edit a file as root using sudo to elevate
+your privileges you need to re-open file like this:
+/ssh:icinga|sudo:icinga:/etc/configfile.conf
+
+
+
+** Had to learn MySQL basics to check if databases are loaded
+# Showing existing databases:
+show databases;
+# Creating a new database:
+create database $DB_NAME;
+# Creating a table inside a database:
+> use pets // pick the database to operate on
+//use statement tells MySQL to use pets as the default dob to run
+//commands on.
+> create table cats
+(
+id INT unsigned NOT NULL AUTO_INCREMENT, # Unique ID for the record
+name VARCHAR(150) NOT NULL, # Name of the cat
+owner VARCHAR(150) NOT NULL, # Owner of the cat
+birth DATE NOT NULL, # Birthday of the cat
+PRIMARY KEY (ID) # Make the id the primary key
+);
+
+# Check if the table has been created with a SHOW TABLES statement:
+SHOW TABLES;
+
+
+
+
+
+
+
+
+
+
+
+#  LocalWords:  VARCHAR
+**** In the end used `mysqlshow | wc -l`
+** To pipe output of a command that receives heredocs
+we put the pipe after <<EOF, like in this example:
+tac <<EOF | awk '{print "awk saw: "$0}'
+one
+two
+three
+EOF
+
+This prints:
+awk saw: three
+awk saw: two
+awk saw: one
+** Different versions of Icinga and identifying them
+Sometimes Icinga will update itself from 2.4 to 2.11. This results in
+some differences in the way app works that require addressing.
+
+One difference noticed so far is the change of the configuration
+wizard for the icinga. This hurts a little, because I used a heredocs
+to configure it. It's not a good idea right now to learn some advanced
+bash to make the script read the icinga output and act accordingly. An
+easier solution would be to use the tools I already know, or almost
+know, grep and awk.
+
+The version of icinga can be checked by running icinga2 --version, and
+from that huge wall of text it's possible to extract the required
+information. I only need two machines with both the 2.4 and 2.11
+versions, to make sure that the conditional will properly distinguish
+between the versions. Original icinga VM got "infected" with the new
+version of the app. I've created a new VM with IP increased by 1 and
+hostname isinga, which has the original 2.5 version.
+
+[vagrant@isinga-test ~]$ sudo icinga2 --version | head -1
+icinga2 - The Icinga 2 network monitoring daemon (version: v2.5.4)
+
+[vagrant@icinga ~]$ sudo icinga2 --version | head -1
+icinga2 - The Icinga 2 network monitoring daemon (version: 2.11.2-1)
+
+I can get just the last element with awk:
+[vagrant@icinga ~]$ sudo icinga2 --version | head -1 | awk '{print $10}'
+2.11.2-1)
+
+People in #bash (exactly lopid) told me to use Parameter Expansion
+instead. 
+<lopid> !pe
+<greybot> Parameter Expansion expands parameters: "$foo", "$1". You
+can use it to perform string or array operations: "${file%.mp3}",
+"${0##*/}", "${files[@]: -4}". They should *always* be quoted. See:
+http://mywiki.wooledge.org/BashFAQ/073 and "Parameter Expansion" in
+man bash. Also see http://wiki.bash-hackers.org/syntax/pe.
+
+Just read the article that was one of the links at the top of the
+linked FAQ answer. Now I know what parameters are. That there are two
+types of them, variables and special parameters. Special are used by
+bash to inform about some environment state. Variables can be set and
+modified by the user. When used in a script, parameters are "expanded"
+(also called parameter substitution). In contrary to other programming
+languages, what is substituted can still be further modified my shell
+(word splitting). Therefore it is much advised to quote every
+parameter expansion.
+
+More advanced parameter expansion allows us to have something written
+right after the expanded string:
+pet=cat
+echo "One $pet and many ${pet}s."
+>One cat and many cats.
+
+Another thing is modifying the expanded parameter. There are very many
+things we can actually do, most basic are:
+1. to have a default if the parameter variable is empty or unset,
+2. to print only specific part of the string,
+3. to print the length of the parameter,
+4. delete or substitute a pattern inside of the string, at the end or beginning,
+5. remove a pattern from beginning/end,
+6. as above, but greedily.
+
+Here we will need to remove or substitute the frontal v from the 2.5
+version, and from the end remove the last dot and all after
+it. Because of parameter expansion limitations this will require two
+expansions.
+
+par=2.11.2-1)
+or
+par=v2.5.4)
+# First expansion to remove v
+par="${par/#v/}"
+par="${par%.*}"
+
+in a one liner
+icinga_ver="$(sudo icinga2 --version | head -1 | awk '{print $10}')";icinga_ver="${icinga_ver/#v/}";icinga_ver="${icinga_ver%.*}";echo $icinga_ver
+
+This returns version of icinga. Either 2.5 or 2.11 (and later this can
+be different versions). Not it's just to rename variable par to
+something more meaningful and put it inside of an 'if' conditional,
+that will let the installation wizard act accordingly to the program's
+version and also signal an easy to understand error (explaining that
+the value is not a known icinga value).
+
