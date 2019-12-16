@@ -168,7 +168,7 @@ After getting frustrated I've started digging at the problem and
 stopped taking regular brakes and documenting tried solutions. Being
 tired and not documenting what I've been doing might have added to the
 reasons why the error took couple days to fix.
-* Icinga
+* Icinga (with Icinga Web 2.4)
 With icinga not only the web-app has to be installed, but also other
 VMs have to be configured to feed Icinga with data. 
 ** Install Icinga server and web-app.
@@ -361,11 +361,25 @@ echo "$key" # to avoid wrath of the linter program
 After icinga upgraded itself to 2.11, there are some issues. The line
 enabling the scl repository is not enough :(
 
+*** Development of this version is paused, moving to icinga 2.11
+* Icinga Web 2.11
+While installing the Icinga I've encountered some problems, mainly:
+Icinga will update itself to version 2.11, which changes many
+things. Most important is that Icinga Web 2.11 requires new version of
+php. I've decided to use the Icinga documentation to make the
+provisioning script anew. Most of the code can be reused, and what is
+specific to Icinga 2.11 has to be extracted from the docs.
+
+This is for the better, as the real life usage would require the
+latest Icinga version, with latest security patches. 
+
+
 
 ** Configure other VMs to feed data into Icinga 
 
-* Time to create two versions of the script - 2.4 and 2.11 (2.4 can wait)   
-** Learning Git basics to put scripts in a repo
+* DONE Learning Git basics to put scripts in a repo
+  CLOSED: [2019-12-16 Mon 20:39]
+** Most basic Git commands.
 I've learned basics of git. It's actually quite simple the n-th time
 you are learning it.
 
