@@ -375,6 +375,7 @@ latest Icinga version, with latest security patches.
 
 
 
+
 ** Configure other VMs to feed data into Icinga 
 
 * DONE Learning Git basics to put scripts in a repo
