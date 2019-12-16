@@ -395,7 +395,56 @@ https://simpleit.rocks/git/make-git-ignore-temporary-files-produced-by-emacs-and
 A global git ignore file might work too. remember to initialize it
 first with `git config --global core.excludesfile ~/.gitignore_global`
 ** Learning to use git with a remote repo.
-
+To use git with remote repo we use git remote command.
+*** git remote add $repo_shortname $repo_url_address.git
+will add the repo under the url as a shortname. This can shorten the
+amount of writing. If we start a project on our machine by pulling a
+remote repo, than the repo of origin will be called as origin.
+*** git fetch origin (or remote name)
+will fetch all the info about remote branches and such, but not any
+files.
+*** git pull origin
+will pull all the files at origin into our working directory. That's a
+prerequisite to put our stuff on the server, but first we need to
+merge our branches.
+*** git merge --allow-unrelated-histories
+will let us merge local branch with the origin/master branch (that is,
+the main branch sitting on the origin server). Without the
+allow-unrelated-histories there was some error, probably because both
+branches that were being merged (local one and the one on the github
+server containing only README.md) had no common "history".
+*** git branch --set-upstream-to=origin/master
+To save myself writing the name of the remote repo and branch for
+commits and pushes, I've set the default repo to push to or use. The
+origin/master part came out of tabbing out the value. I guess the
+origin is the short name of that repo, that was renamed with:
+*** git remote rename hub origin
+This command was improvised, but worked thanks to git's intuitive
+interface. Called the github repo hub at first, but the book was using
+origin and it has a nice and professional sound to it.
+*** git status -s
+A new cooler status, that is a bit more compact. It doesn't give tips
+on which git commands you might likely want to use. It uses two
+columns in front of filenames to represent their status. First column
+is the staging area, and the second column is the working
+directory. ?? means an untracked file. M in one of the columns means
+either a modified file that has not been staged or that has not been
+committed. If a wile was modified, staged and then modified again,
+there will be two M's for it's status. An `A` is a new file that has
+been added to be tracked after this commit.
+*** git diff and git diff --cache
+These will show the line by line comparison between the working
+directory and the staging area or with (--cache or --staged) option,
+the difference between the staging area and last snapshot
+(commit). The output of the command includes also a small summary of
+the commit to be made, like added/removed lines.
+*** git push
+will push all the commits made since last updating our data on the
+server. It can be many commits and it's best if each commit represents
+a one small change to the project. It is especially important when
+working with other people, as it will make it easier for people to
+accept my pull requests. After running the command the changes are
+uploaded and we can see them being moved to the remote server.
 * Extras
 ** Forgot, that to connect to a remote server
 with emacs tramp and then edit a file as root using sudo to elevate
