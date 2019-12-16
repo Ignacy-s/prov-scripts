@@ -18,18 +18,8 @@ yum install -y epel-release
 ## Testing if it's actually needed. Looks like it is.
 yum install -y centos-release-scl
 
-# Installing Apache and PHP
-yum install -y httpd php php-gd php-intl php-ldap php-ZendFramework php-ZendFramework-Db-Adapter-Pdo-Mysql php-pecl-imagick php-fpm
-
-# Configure PHP
-mystring="date.timezone = \"Europe/Oslo\""
-if [ "$(grep -c "$mystring"  /etc/php.ini)" -lt 1 ]
-then {
-cp -v /etc/php.ini /etc/php.ini.bak-$(($(date +%s)/60))
-echo "date.timezone = \"Europe/Oslo\"" | tee -a /etc/php.ini
-}
-else echo "Timezone already set."
-fi
+# Installing Apache
+yum install -y httpd 
 
 # Start and Enable the Web Server
 systemctl enable --now httpd
@@ -62,6 +52,31 @@ yum install -y https://packages.icinga.com/epel/icinga-rpm-release-7-latest.noar
 
 # Install Icinga
 yum install -y icinga2 icingaweb2 icingacli icinga2-ido-mysql
+
+
+# Try to make Icinga install the latest versions of itself
+yum update -y
+
+# Start and enable the FPM service
+systemctl enable --now rh-php71-php-fpm.service
+
+yum install rh-php71-php-mysqlnd
+
+# Configure PHP
+mystring="date.timezone = \"Europe/Oslo\""
+php_path1="/etc/php.ini"
+php_path2="/etc/opt/rh/rh-php71/php.ini"
+for php_path in php_path1 php_path2;
+do
+if [ "$(grep -c "$mystring"  "$php_path")" -lt 1 ]
+then {
+cp -v "$php_path" ${php_path}.bak-$(($(date +%s)/60))
+echo "date.timezone = \"Europe/Oslo\"" | tee -a "$php_path"
+}
+else echo "Timezone already set."
+fi
+# Restart php fpm
+systemctl restart rh-php71-php-fpm.service
 
 #Configure the Database
 if [ "$(mysqlshow -u root -proot123 icinga | wc -l)" -eq 5 ]
@@ -108,9 +123,13 @@ if [ "$(grep -c "$mystring" "$my_url" )" -lt 1 ]
 then {
     sed -E -i.bak-$(($(date +%s)/60)) -e '/\/\/(us|pa|ho|da)/s/\/\///' \
 -e '/password/s/inga/inga123/' $my_url
+   
 }
 else echo "DB password in icinga already set."
 fi
+# Enable ido-mysql.conf
+icinga2 feature enable ido-mysql
+
 
 # Allow commands to be received by the Web Front End
 icinga2 feature enable command

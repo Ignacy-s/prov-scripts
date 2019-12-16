@@ -362,7 +362,7 @@ After icinga upgraded itself to 2.11, there are some issues. The line
 enabling the scl repository is not enough :(
 
 *** Development of this version is paused, moving to icinga 2.11
-* Icinga Web 2.11
+* Icinga (with Icinga Web 2.11
 While installing the Icinga I've encountered some problems, mainly:
 Icinga will update itself to version 2.11, which changes many
 things. Most important is that Icinga Web 2.11 requires new version of
@@ -373,8 +373,22 @@ specific to Icinga 2.11 has to be extracted from the docs.
 This is for the better, as the real life usage would require the
 latest Icinga version, with latest security patches. 
 
+** Reading the Icinga installation docs, looking for deviations.
+The order in which things are done differs between Jason's
+documentation and what's on Icinga web-page. Other than that tho, I
+haven't found any difference in Icinga installation.
 
+** Trying to implement the differences in newer Icinga Web installation
+Usage of php 7.3 from SCL repo changes things a little bit. Will have
+to run the script several times to make sure that everything
+works. Would be best with a clean VM, without regular php. Required
+php packages will be pulled by Icinga installation. I'm not sure where
+the php.ini will be sitting, some candidates for that are in the
+documentation.
 
+** Added php-fpm installation lines from Icinga docs
+It works now!
+** Rewritten Configure PHP to add timezone to both php locations
 
 ** Configure other VMs to feed data into Icinga 
 
