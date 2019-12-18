@@ -612,3 +612,13 @@ that will let the installation wizard act accordingly to the program's
 version and also signal an easy to understand error (explaining that
 the value is not a known icinga value).
 
+** Change wagrant to use cache
+To avoid annoying wait time everytime wagrant was run, I've made it
+create a cache file ~/.globvag. If the file is older than 1800
+seconds, wagrant will re-run `vagrant global-status`. The line
+if [[ ! (`stat --format=%Y $file` -le $(( `date +%s` - 1800 )) ) ]]
+comes from stack overflow question about how to do something if a file
+is more than 30 minutes old, found at:
+https://stackoverflow.com/a/2005658
+
+

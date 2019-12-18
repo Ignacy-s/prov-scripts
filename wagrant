@@ -3,8 +3,10 @@
 
 # Cache vagrant global-status output in file
 file="/home/igi/.globvag"
-if [[ ! ( `stat --format=%Y $file` -le $(( `date +%s` - 1800 )) ) ]] ; then 
-wvagrant global-status > ~/.globvag
+if [[ ! ( `stat --format=%Y $file` -le $(( `date +%s` - 1800 )) ) ]]
+then 
+vagrant global-status > ~/.globvag
 fi
+
 vagrant $1 $( cat ~/.globvag | grep $2 | cut -d' ' -f1 )
 exit 0
