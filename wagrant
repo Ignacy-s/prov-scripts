@@ -1,0 +1,10 @@
+#!/bin/bash
+# Run a vagrant $command ($1) on a vagrant $server ($2)
+
+# Cache vagrant global-status output in file
+file="/home/igi/.globvag"
+if [[ ! ( `stat --format=%Y $file` -le $(( `date +%s` - 1800 )) ) ]] ; then 
+wvagrant global-status > ~/.globvag
+fi
+vagrant $1 $( cat ~/.globvag | grep $2 | cut -d' ' -f1 )
+exit 0
