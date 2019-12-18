@@ -3,9 +3,15 @@
 
 # Cache vagrant global-status output in file
 file="/home/igi/.globvag"
+# Create cache file if it doesn't exist
+if [[ ! ( -e /home/igi/.globvag ) ]]
+then vagrant global-status --prune > ~/.globvag
+fi
+
+# Refresh the file if older than 1800 seconds
 if [[ ! ( `stat --format=%Y $file` -le $(( `date +%s` - 1800 )) ) ]]
 then 
-vagrant global-status > ~/.globvag
+vagrant global-status --prune > ~/.globvag
 fi
 
 vagrant $1 $( cat ~/.globvag | grep $2 | cut -d' ' -f1 )

@@ -620,5 +620,51 @@ if [[ ! (`stat --format=%Y $file` -le $(( `date +%s` - 1800 )) ) ]]
 comes from stack overflow question about how to do something if a file
 is more than 30 minutes old, found at:
 https://stackoverflow.com/a/2005658
+** Change update_ssh_config.sh to use cached servers list
+*** Finding out how to use sed to delete old entries.
+Trying to prepare proper sed expression to match everything between
+the Vagrant Projects Start and End comment lines.
+
+sed -n  '/#Vagrant Projects START/,/#Vagrant Projects END/ p'
+ ~/.ssh/config
+
+*** Got an idea to save the edited place with sed.
+While reading the docs I've found that like 'p' prints the currently
+edited line, the '=' commands prints the number of the currently
+edited line. Can use it to have the changes in place instead of
+appending them to the end of the file.
+
+*** TODO Arrays with names and hashes of servers
+Temporarily I will use the same servers_list file.
+# Here I need to get a new list of servers, preferably in an array of
+# either server names (what I will use and what ssh_config needs, or
+# vagrant server hashes (which wagrant command supplies to
+# vagrant). Another array, preferably associative with key-values -
+# server-hash -> name or vice versa.
+# Let's say it(the arrary)'s called servers
+
+***** Started reading about Arrays on bash wiki.
+
+*** Reworking adding new entries.
+
+# Adding new entries can be done two ways. Since now I can use sed 'i'
+# function, I could just insert each server config batch in the right
+# place. Instead decided to upgrade the old method. The for loop can
+# be inside the curly braces, so that the block init and close lines
+# can be written only ones. Need to trace the pointer somehow. Started
+# playing with where it ends variable, but then remembered, that I'm
+# still reading the unchanged ssh config and writing into a temp ssh
+# config.
+
+#Add new entries
+{ head -$(($where_it_started - 1)) ~/.ssh/config
+echo "#Vagrant Projects START"
+for sys in ${servers[*]}
+do
+    printf "$( wagrant ssh-config "$sys" | sed "s/Host default/Host $sys/" )\n\n";
+done
+ tail -n +$where_it_started ~/.ssh/config; } > ~/.ssh/config-tmp
+    mv ~/.ssh/config-tmp ~/.ssh/config
+
 
 
