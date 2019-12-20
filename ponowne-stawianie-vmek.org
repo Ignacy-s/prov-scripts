@@ -683,12 +683,14 @@ unset array
 This will yield an array name arrayX with the names of all running
 servers. This is enough to populate the .ssh/config file.
 
+***** Handling Zombie VMs. 
 There is one edge case: Sometimes vagrant reports VM as running, even
 though it's not. To avoid errors we can check VM's status with wagrant
 status called on it's name, and then grep for "running" existing in
 the output. This coupled with an if statement calling "continue"
 special word will skip the server that was reported as running in
 vagrant global-status if the server is not actually running.
+
 
 
       
