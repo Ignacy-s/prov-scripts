@@ -14,7 +14,7 @@
 
 
 
-#set -x
+set -e
 
 #backup, but only once per hour
 if [[ ! -e ~/.ssh/config.bak.$(date +%H.%d%m%y) ]]; then
@@ -23,8 +23,7 @@ fi
 
 # read server's list from file (leaving commented in case it comes in
 # handy at some point).
- mapfile -t servers < ./servers_list
-
+#  mapfile -t servers < ./servers_list
 
 # Remove old entries (old version).
 #Left commented for reference on how to use arrays:
@@ -34,7 +33,7 @@ fi
 #done
 
 # Remember where_it_started (the Vagrant block in ssh_config)
-where_it_started=$(sed -n  '/#Vagrant Projects START/ =' ~/.ssh/config)
+where_it_started=$(sed -n  '/#Vagrant Projects START/ \=' ~/.ssh/config)
 # Remove old entries.
 sed -i '/#Vagrant Projects START/,/#Vagrant Projects END/ d'\
 ~/.ssh/config 
@@ -56,13 +55,24 @@ sed -i '/#Vagrant Projects START/,/#Vagrant Projects END/ d'\
 # still reading the unchanged ssh config and writing into a temp ssh
 # config.
 
-#Add new entries
-{ head -$(($where_it_started - 1)) ~/.ssh/config
+# Create an array with names of running servers.
+unset servers_array
+for i in $(vagrant global-status --prune | grep running | cut -f6 -d' ') ; do servers_array+=( "${i##*/}" ); done 
+
+# Add new entries to .ssh/config
+{
+    #this will "save" the content of ssh_config
+head -$((where_it_started - 1)) ~/.ssh/config
 echo "#Vagrant Projects START"
-for sys in ${servers[*]}
+for sys in "${servers_array[@]}"
 do
+    #do nothing if VM's status is not running
+    if [ $(wagrant status $sys | grep -c running) -lt 1 ] ; then
+	continue
+    fi
     printf "$( wagrant ssh-config "$sys" | sed "s/Host default/Host $sys/" )\n\n";
 done
- tail -n +$where_it_started ~/.ssh/config; } > ~/.ssh/config-tmp
-    mv ~/.ssh/config-tmp ~/.ssh/config
+echo "#Vagrant Projects END"
+tail -n +$where_it_started ~/.ssh/config; } > ~/.ssh/config-tmp
+mv ~/.ssh/config-tmp ~/.ssh/config
 
