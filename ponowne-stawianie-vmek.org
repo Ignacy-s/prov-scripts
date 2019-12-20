@@ -635,7 +635,7 @@ edited line. Can use it to have the changes in place instead of
 appending them to the end of the file.
 
 *** TODO Arrays with names and hashes of servers
-Temporarily I will use the same servers_list file.
+***** Temporarily I will use the same servers_list file.
 # Here I need to get a new list of servers, preferably in an array of
 # either server names (what I will use and what ssh_config needs, or
 # vagrant server hashes (which wagrant command supplies to
@@ -643,9 +643,57 @@ Temporarily I will use the same servers_list file.
 # server-hash -> name or vice versa.
 # Let's say it(the arrary)'s called servers
 
-***** Started reading about Arrays on bash wiki.
+***** I'm a little sleep deprived today, so this should be checked when I'm
+in better shape.
+Read up on arrays. Tried the "Learning Bash" book bought in one of
+Humble Bundles. First code example from the chapter on arrays was
+something that Should do it's job in my script. The example shows
+initializing of an array with output of cut run on /etc/passwd (which
+contains data on users on system, including their user_id number and
+their username). A for loop is run on the cut output, where each
+iteration of the loop puts a username into an array element with
+user_id as an index. This is the example:
 
-*** Reworking adding new entries.
+for i in $(cut -f 1,3 -d: /etc/passwd) ; do
+  array[${i#*:}]=${i%:*}
+done
+
+Arrays seem quite counter intuitive, best would be to test the code as
+it's being written.
+
+In that example a for is iterated over lines of output from cut. Cut
+cuts out fields number 1 and three (uid and username), using `:` as a
+separator. All taken from /etc/passwd. There is a parameter expansion
+run on this output. ${i#*:} gives value of i, with the initial part
+removed until the first `:`. This gives us uuid without the trailing
+username. Second expansion, ${i%:*} gives us the cut out string minus
+the trailing :* which matches all until first `:` counted from the end
+of the string.
+
+***** I've played a little with the terminal, 
+for i in $(vagrant global-status --prune | grep running | cut 
+-f6 -d' ') ; do arrayX+=( ${i##*/} ); done 
+
+this will create an array (using add a new element to array that is
+array+=(new_element)). Could be wise to unset the array first, just in
+case there already was an array with the same name.
+
+unset array
+
+This will yield an array name arrayX with the names of all running
+servers. This is enough to populate the .ssh/config file.
+
+There is one edge case: Sometimes vagrant reports VM as running, even
+though it's not. To avoid errors we can check VM's status with wagrant
+status called on it's name, and then grep for "running" existing in
+the output. This coupled with an if statement calling "continue"
+special word will skip the server that was reported as running in
+vagrant global-status if the server is not actually running.
+
+
+      
+
+*** Reworking adding new entries into the .ssh/config
 
 # Adding new entries can be done two ways. Since now I can use sed 'i'
 # function, I could just insert each server config batch in the right
