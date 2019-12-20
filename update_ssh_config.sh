@@ -33,7 +33,7 @@ fi
 #done
 
 # Remember where_it_started (the Vagrant block in ssh_config)
-where_it_started=$(sed -n  '/#Vagrant Projects START/ \=' ~/.ssh/config)
+where_it_started=$(sed -n  '/#Vagrant Projects START/ =' ~/.ssh/config)
 # Remove old entries.
 sed -i '/#Vagrant Projects START/,/#Vagrant Projects END/ d'\
 ~/.ssh/config 
