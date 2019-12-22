@@ -32,11 +32,6 @@ fi
 #    sed -i "/Host ${sys}/,+10d" ~/.ssh/config
 #done
 
-# Remember where_it_started (the Vagrant block in ssh_config)
-where_it_started=$(sed -n  '/#Vagrant Projects START/ =' ~/.ssh/config)
-# Remove old entries.
-sed -i '/#Vagrant Projects START/,/#Vagrant Projects END/ d'\
-~/.ssh/config 
 
 # Here I need to get a new list of servers, preferably in an array of
 # either server names (what I will use and what ssh_config needs, or
@@ -58,6 +53,13 @@ sed -i '/#Vagrant Projects START/,/#Vagrant Projects END/ d'\
 # Create an array with names of running servers.
 unset servers_array
 for i in $(vagrant global-status --prune | grep running | cut -f6 -d' ') ; do servers_array+=( "${i##*/}" ); done 
+
+# Remember where_it_started (the Vagrant block in ssh_config)
+where_it_started=$(sed -n  '/#Vagrant Projects START/ =' ~/.ssh/config)
+# Remove old entries.
+sed -i '/#Vagrant Projects START/,/#Vagrant Projects END/ d'\
+~/.ssh/config 
+
 
 # Add new entries to .ssh/config
 {
