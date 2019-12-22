@@ -13,12 +13,20 @@
 # instead take a list of running servers from vagrant global status.
 
 
-
+#Debugging variables
 set -e
+set -x
+debug_mode=1
 
-#backup, but only once per hour
-if [[ ! -e ~/.ssh/config.bak.$(($(date +%s)/(60*60))) ]]; then
+
+# Backup, but only once per hour
+if [[ ! -e ~/.ssh/config.bak.$(( $(date +%s)/(60*60) )) ]]; then
+    if [ $debug_mode -eq 1 ]; then
+	echo "backing up config to config."$(($(date +%s)/(60*60)))
+    fi
     cp ~/.ssh/config ~/.ssh/config.bak.$(($(date +%s)/(60*60)))
+elif [ $debug_mode -eq 1 ]; then
+    echo ".ssh/confing already backed up this hour."
 fi
 
 # read server's list from file (leaving commented in case it comes in
@@ -52,7 +60,14 @@ fi
 
 # Create an array with names of running servers.
 unset servers_array
-for i in $(vagrant global-status --prune | grep running | cut -f6 -d' ') ; do servers_array+=( "${i##*/}" ); done 
+for i in $(vagrant global-status --prune | grep running | cut -f6 -d' ') ; do servers_array+=( "${i##*/}" ); done
+if [ $debug_mode -eq 1 ]; then
+    echo "Oto lista serwerow:${servers_array[*]}"
+fi
+
+
+#travelling exit 0 to debug the script step by step.
+exit 0
 
 # Remember where_it_started (the Vagrant block in ssh_config)
 where_it_started=$(sed -n  '/#Vagrant Projects START/ =' ~/.ssh/config)
@@ -77,4 +92,4 @@ done
 echo "#Vagrant Projects END"
 tail -n +$where_it_started ~/.ssh/config; } > ~/.ssh/config-tmp
 mv ~/.ssh/config-tmp ~/.ssh/config
-
+exit 0

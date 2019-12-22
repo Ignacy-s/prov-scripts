@@ -691,6 +691,8 @@ the output. This coupled with an if statement calling "continue"
 special word will skip the server that was reported as running in
 vagrant global-status if the server is not actually running.
  
+*** Reordered script a little and modified it to ease debugging
+
 *** Reworking adding new entries into the .ssh/config
 
 # Adding new entries can be done two ways. Since now I can use sed 'i'
@@ -711,4 +713,15 @@ do
 done
  tail -n +$where_it_started ~/.ssh/config; } > ~/.ssh/config-tmp
     mv ~/.ssh/config-tmp ~/.ssh/config
+    
+*** Debugging. So far doesn't really work.
+**** Seems like backing up works properly now, using %s/3600
+**** Checking if server's list gets created properly.
+Forgot that there have to be running vagrant servers for the thing to
+run.
 
+It wasn't, the command:
+vagrant global-status | grep running | cut -f7 -d' '
+is not reliable. Rewriting using awk.
+
+**** There's a problem with sed
