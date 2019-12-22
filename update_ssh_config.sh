@@ -60,9 +60,12 @@ fi
 
 # Create an array with names of running servers.
 unset servers_array
-for i in $(vagrant global-status --prune | grep running | cut -f6 -d' ') ; do servers_array+=( "${i##*/}" ); done
+for i in $(vagrant global-status --prune | grep running | \
+	       awk '{ print $5 }' )
+    do servers_array+=( "${i##*/}" );
+done
 if [ $debug_mode -eq 1 ]; then
-    echo "Oto lista serwerow:${servers_array[*]}"
+    echo "Oto lista serwerow: ${servers_array[*]}"
 fi
 
 
