@@ -17,8 +17,8 @@
 set -e
 
 #backup, but only once per hour
-if [[ ! -e ~/.ssh/config.bak.$(date +%H.%d%m%y) ]]; then
-    cp ~/.ssh/config ~/.ssh/config.bak.$(date +%H.%d%m%y)
+if [[ ! -e ~/.ssh/config.bak.$(($(date +%s)/(60*60))) ]]; then
+    cp ~/.ssh/config ~/.ssh/config.bak.$(($(date +%s)/(60*60)))
 fi
 
 # read server's list from file (leaving commented in case it comes in

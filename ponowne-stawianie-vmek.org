@@ -690,11 +690,7 @@ status called on it's name, and then grep for "running" existing in
 the output. This coupled with an if statement calling "continue"
 special word will skip the server that was reported as running in
 vagrant global-status if the server is not actually running.
-
-
-
-      
-
+ 
 *** Reworking adding new entries into the .ssh/config
 
 # Adding new entries can be done two ways. Since now I can use sed 'i'
@@ -715,6 +711,4 @@ do
 done
  tail -n +$where_it_started ~/.ssh/config; } > ~/.ssh/config-tmp
     mv ~/.ssh/config-tmp ~/.ssh/config
-
-
 
