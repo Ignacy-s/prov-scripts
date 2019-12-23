@@ -2,17 +2,17 @@
 # Run a vagrant $command ($1) on a vagrant $server ($2)
 
 # Cache vagrant global-status output in file
-file="/home/igi/.globvag"
+file="$HOME/.globvag"
 # Create cache file if it doesn't exist
-if [[ ! ( -e /home/igi/.globvag ) ]]
-then vagrant global-status --prune > ~/.globvag
+if [[ ! ( -e $file ) ]]
+then vagrant global-status --prune > $file
 fi
 
 # Refresh the file if older than 1800 seconds
-if [[ ! ( `stat --format=%Y $file` -le $(( `date +%s` - 1800 )) ) ]]
+if [[ ! ( $(stat --format=%Y $file) -le $(( $(date +%s) - 1800 )) ) ]]
 then 
-vagrant global-status --prune > ~/.globvag
+vagrant global-status --prune > $file
 fi
 
-vagrant $1 $( cat ~/.globvag | grep $2 | cut -d' ' -f1 )
+vagrant $1 $( cat $file | grep $2 | cut -d' ' -f1 )
 exit 0
