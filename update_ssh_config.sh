@@ -59,14 +59,17 @@ for line in "$start_line" "$end_line"; do
 	exit 1
     fi
 done
-#travelling exit 0 to debug the script step by step.
-exit 0
 
 # Remember where_it_started (the Vagrant block in ssh_config)
 where_it_started=$(sed -n  "/$start_line/ =" ~/.ssh/config)
+if [ $debug_mode -eq 1 ]; then
+    echo "Block starts at: $where_it_started"
+fi
+#travelling exit 0 to debug the script step by step.
+exit 0
+
 # Remove old entries.
 sed -i "/$start_line/,/$end_line/ d" ~/.ssh/config 
-
 
 # Add new entries to .ssh/config
 {

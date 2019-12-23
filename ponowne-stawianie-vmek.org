@@ -727,6 +727,5 @@ Now it works.
 Somehow there were two start and two end lines. Will make the script
 check how many of them are there in the config. If there are more than
 1 of each, the script will stop and report the error.
-
-**** Added a test for how many start and end block lines are there.
-
+Now the value written is correct, and there wont be another case with
+double start lines.
