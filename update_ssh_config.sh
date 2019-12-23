@@ -55,18 +55,21 @@ sed -i "/$start_line/,/$end_line/ d" ~/.ssh/config
 # Add new entries to .ssh/config
 {
     #this will "save" the content of ~/.ssh/config
-head -$((where_it_started - 1)) ~/.ssh/config
-echo "$start_line"
-for sys in "${servers_array[@]}"
-do
-    #do nothing if VM's status is not running
-    if [ $(wagrant status $sys | grep -c running) -lt 1 ] ; then
-	continue
-    fi
-    printf "$( wagrant ssh-config "$sys" | sed "s/Host default/Host $sys/" )\n\n";
-done
-echo "$end_line"
-tail -n +$where_it_started ~/.ssh/config; } > ~/.ssh/config-tmp
+    head -$((where_it_started - 1)) ~/.ssh/config
+    echo "$start_line"
+    for sys in "${servers_array[@]}"
+        do
+	#do nothing if VM's status is not running
+	if [ $(wagrant status $sys | grep -c running) -lt 1 ] ; then
+	    continue
+	fi
+	#use wagrant to print the VM-specific ssh config
+	printf "$( wagrant ssh-config "$sys" |\
+	       sed "s/Host default/Host $sys/" )\n\n";
+    done
+    echo "$end_line"
+    tail -n +$where_it_started ~/.ssh/config
+} > ~/.ssh/config-tmp
 
 mv ~/.ssh/config-tmp ~/.ssh/config
 exit 0
