@@ -32,22 +32,37 @@ fi
 # Define start and end line strings.
 start_line="#Vagrant Projects START"
 end_line="#Vagrant Projects END"
+    
 
-# Check if there is only one of START and STOP lines.
+# Check if there is at most one of START and STOP lines.
 for line in "$start_line" "$end_line"; do
     how_many_lines="$(grep -c "$line" ~/.ssh/config)"
-    if [ "$how_many_lines" -ne 1 ]; then
+    if [ "$how_many_lines" -gt 1 ]; then
 	echo "There are $how_many_lines of $line"
 	echo "Aborting"
-	exit 1
+       	exit 1
     fi
 done
 
-# Remember where_it_started (the Vagrant block in ~/.ssh/config)
-where_it_started=$(sed -n  "/$start_line/ =" ~/.ssh/config)
-if [ $debug_mode -eq 1 ]; then
-    echo "Block starts at: $where_it_started"
+
+# Check if script is run for the first time
+# (by checking if $start_line exists in the file)
+if [ "$(grep -c "$start_line" ~/.ssh/config)" -eq 0 ]; then
+    echo "Welcome aboard!"
+    where_it_started=$(sed -n "$ =" ~/.ssh/config)
+else
+    # Remember where_it_started (the Vagrant block in ~/.ssh/config)
+    where_it_started=$(sed -n  "/$start_line/ =" ~/.ssh/config)
+    if [ $debug_mode -eq 1 ]; then
+        echo "Block starts at: $where_it_started"
+    fi
 fi
+
+# Check if script is run for the first time
+# (by checking if $start_line exists in the file)
+if [ "$(grep -c "$start_line" ~/.ssh/config)" -eq 0 ]; then
+    echo "Welcome aboard!"
+
 
 # Remove old entries.
 sed -i "/$start_line/,/$end_line/ d" ~/.ssh/config 
