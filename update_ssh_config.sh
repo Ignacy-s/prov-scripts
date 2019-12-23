@@ -47,22 +47,32 @@ if [ $debug_mode -eq 1 ]; then
     echo "Oto lista serwerow: ${servers_array[*]}"
 fi
 
-
+# Define start and end line strings.
+start_line="#Vagrant Projects START"
+end_line="#Vagrant Projects END"
+# Check if there is only one of START and STOP lines.
+for line in "$start_line" "$end_line"; do
+    how_many_lines="$(grep -c "$line" ~/.ssh/config)"
+    if [ "$how_many_lines" -ne 1 ]; then
+	echo "There are $how_many_lines of $line"
+	echo "Aborting"
+	exit 1
+    fi
+done
 #travelling exit 0 to debug the script step by step.
 exit 0
 
 # Remember where_it_started (the Vagrant block in ssh_config)
-where_it_started=$(sed -n  '/#Vagrant Projects START/ =' ~/.ssh/config)
+where_it_started=$(sed -n  "/$start_line/ =" ~/.ssh/config)
 # Remove old entries.
-sed -i '/#Vagrant Projects START/,/#Vagrant Projects END/ d'\
-~/.ssh/config 
+sed -i "/$start_line/,/$end_line/ d" ~/.ssh/config 
 
 
 # Add new entries to .ssh/config
 {
     #this will "save" the content of ssh_config
 head -$((where_it_started - 1)) ~/.ssh/config
-echo "#Vagrant Projects START"
+echo "$start_line"
 for sys in "${servers_array[@]}"
 do
     #do nothing if VM's status is not running
@@ -71,7 +81,7 @@ do
     fi
     printf "$( wagrant ssh-config "$sys" | sed "s/Host default/Host $sys/" )\n\n";
 done
-echo "#Vagrant Projects END"
+echo "$end_line"
 tail -n +$where_it_started ~/.ssh/config; } > ~/.ssh/config-tmp
 mv ~/.ssh/config-tmp ~/.ssh/config
 exit 0

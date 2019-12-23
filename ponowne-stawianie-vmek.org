@@ -475,12 +475,10 @@ working with other people, as it will make it easier for people to
 accept my pull requests. After running the command the changes are
 uploaded and we can see them being moved to the remote server.
 * Extras
-** Forgot, that to connect to a remote server
-with emacs tramp and then edit a file as root using sudo to elevate
+** Forgot how to connect to a remote server with emacs
+tramp and then edit a file as root using sudo to elevate
 your privileges you need to re-open file like this:
 /ssh:icinga|sudo:icinga:/etc/configfile.conf
-
-
 
 ** Had to learn MySQL basics to check if databases are loaded
 # Showing existing databases:
@@ -634,7 +632,7 @@ edited line, the '=' commands prints the number of the currently
 edited line. Can use it to have the changes in place instead of
 appending them to the end of the file.
 
-*** TODO Arrays with names and hashes of servers
+*** Arrays with names and hashes of servers
 ***** Temporarily I will use the same servers_list file.
 # Here I need to get a new list of servers, preferably in an array of
 # either server names (what I will use and what ssh_config needs, or
@@ -724,4 +722,11 @@ It wasn't, the command:
 vagrant global-status | grep running | cut -f7 -d' '
 is not reliable. Rewriting using awk.
 
-**** There's a problem with sed
+Now it works.
+**** There was an error with marking down the beggining of block
+Somehow there were two start and two end lines. Will make the script
+check how many of them are there in the config. If there are more than
+1 of each, the script will stop and report the error.
+
+**** Added a test for how many start and end block lines are there.
+
