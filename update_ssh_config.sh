@@ -45,8 +45,9 @@ done
 
 # Check if script is run for the first time
 # (by checking if $start_line exists in the file)
-if [ "$(grep -c "$start_line" ~/.ssh/config)" -eq 0 ]; then
+if [ $how_many_lines -eq 0 ]; then
     echo "Welcome aboard!"
+    where_it_started=$(sed -n "$ =" ~/.ssh/config)
 else
 # Remember where_it_started (the Vagrant block in ~/.ssh/config)
     where_it_started=$(sed -n  "/$start_line/ =" ~/.ssh/config)
