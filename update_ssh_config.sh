@@ -1,13 +1,11 @@
 #! /bin/bash
-# For Vagrant and LIRW
-# Removing old and adding new .ssh/config entries for servers,
-# that are listed in servers_list file.
-# Expect FUN if server in server's list has same name as some other
-# server in ssh config. just sayin'
-# TODO: make script smarter, isntead of inserting before the last
-# line, just delete the START and END comments, and re-add them after
-# re-adding config files.
 
+# For Vagrant and LIRW course
+
+# Removing old and adding new .ssh/config entries for servers that are
+# listed in servers_list file.  Expect FUN if server in server's list
+# has same name as some other server in ssh config.
+# 
 # Wed 18 Dec 2019 06:23:42 PM CET Ignacy
 # Attempting to change the script to stop using servers_list and
 # instead take a list of running servers from vagrant global status.
@@ -28,25 +26,6 @@ if [[ ! -e ~/.ssh/config.bak.$(( $(date +%s)/(60*60) )) ]]; then
 elif [ $debug_mode -eq 1 ]; then
     echo ".ssh/confing already backed up this hour."
 fi
-
-# read server's list from file (leaving commented in case it comes in
-# handy at some point).
-#  mapfile -t servers < ./servers_list
-
-# Remove old entries (old version).
-#Left commented for reference on how to use arrays:
-#for sys in ${servers[*]} 
-#do
-#    sed -i "/Host ${sys}/,+10d" ~/.ssh/config
-#done
-
-
-# Here I need to get a new list of servers, preferably in an array of
-# either server names (what I will use and what ssh_config needs, or
-# vagrant server hashes (which wagrant command supplies to
-# vagrant). Another array, preferably associative with key-values -
-# server-hash -> name or vice versa.
-# Let's say it(the arrary)'s called servers
 
 
 # Adding new entries can be done two ways. Since now I can use sed 'i'
