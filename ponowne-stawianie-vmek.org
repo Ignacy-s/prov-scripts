@@ -712,7 +712,7 @@ done
  tail -n +$where_it_started ~/.ssh/config; } > ~/.ssh/config-tmp
     mv ~/.ssh/config-tmp ~/.ssh/config
     
-*** Debugging. So far doesn't really work.
+*** Debugging
 **** Seems like backing up works properly now, using %s/3600
 **** Checking if server's list gets created properly.
 Forgot that there have to be running vagrant servers for the thing to
@@ -729,3 +729,5 @@ check how many of them are there in the config. If there are more than
 1 of each, the script will stop and report the error.
 Now the value written is correct, and there wont be another case with
 double start lines.
+
+**** Everything works fine. Changed script's description.

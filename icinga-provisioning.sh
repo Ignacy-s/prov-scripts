@@ -15,7 +15,6 @@ yum update -y || true
 yum install -y epel-release
 
 # Install SCL repository (for newer PHP version)
-## Testing if it's actually needed. Looks like it is.
 yum install -y centos-release-scl
 
 # Installing Apache
@@ -27,6 +26,7 @@ systemctl enable --now httpd
 # Install MariaDB
 yum install -y mariadb-server && systemctl enable --now mariadb
 
+# Securing the mysql server
 #|| true is a mortal sin.
 mysql -v -uroot < /vagrant/mysql_secur\
 e_installation.sql || true
