@@ -13,19 +13,16 @@ yum update -y || true
 
 # Install the EPEL repo:
 yum install -y epel-release
-
 # Install SCL repository (for newer PHP version)
 yum install -y centos-release-scl
 
 # Installing Apache
 yum install -y httpd 
-
 # Start and Enable the Web Server
 systemctl enable --now httpd
 
 # Install MariaDB
 yum install -y mariadb-server && systemctl enable --now mariadb
-
 # Securing the mysql server
 #|| true is a mortal sin.
 mysql -v -uroot < /vagrant/mysql_secur\
@@ -60,7 +57,9 @@ yum update -y
 # Start and enable the FPM service
 systemctl enable --now rh-php71-php-fpm.service
 
-yum install rh-php71-php-mysqlnd
+# Install php-mysql and imagick
+yum  install -y rh-php71-php-mysqlnd
+yum install -y sclo-php71-php-pecl-imagick
 
 # Configure PHP
 mystring="date.timezone = \"Europe/Oslo\""
