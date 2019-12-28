@@ -58,7 +58,7 @@ yum update -y
 systemctl enable --now rh-php71-php-fpm.service
 
 # Install php-mysql and imagick
-yum  install -y rh-php71-php-mysqlnd
+yum install -y rh-php71-php-mysqlnd
 yum install -y sclo-php71-php-pecl-imagick
 
 # Configure PHP
@@ -75,6 +75,9 @@ done
 
 # Restart php fpm
 systemctl restart rh-php71-php-fpm.service
+
+#####debug:
+yum update -y
 
 #Configure the Database
 if [ "$(mysqlshow -u root -proot123 icinga | wc -l)" -eq 5 ]; then
@@ -94,13 +97,13 @@ if [ "$(grep -c "$mystring" /etc/postfix/main.cf)" -lt 1 ]; then
     cp -v /etc/postfix/main.cf \
        /etc/postfix/main.cf.bak-$(($(date +%s)/60))
     tee -a /etc/postfix/main.cf <<EOF
-    "smtp_sasl_auth_enable = yes
+smtp_sasl_auth_enable = yes
 smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
 smtp_sasl_security_options = noanonymous
 smtp_sasl_tls_security_options = noanonymous
 smtp_tls_security_level = encrypt
 header_size_limit = 4096000
-relayhost = [smtp.sendgrid.net]:587"
+relayhost = [smtp.sendgrid.net]:587
 EOF
     cp /vagrant/sasl_passwd /etc/postfix/sasl_passwd
     chmod -v 600 /etc/postfix/sasl_passwd
@@ -130,7 +133,8 @@ icinga2 feature list
 # Install Monitoring Plugins
 yum install -y nagios-plugins-all
 
-# Prepare the server for clients (run the WIZARD for the right icinga ver.)
+# Prepare the server for clients (run the WIZARD for the
+# right icinga version)
 ### (don't run if already run before)
 icinga_ver="$(icinga2 --version | head -1 | awk '{print $10}')"
 icinga_ver="${icinga_ver/#v/}"

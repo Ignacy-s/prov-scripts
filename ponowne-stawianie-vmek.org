@@ -389,8 +389,16 @@ documentation.
 ** Added php-fpm installation lines from Icinga docs
 It works now!
 ** Rewritten Configure PHP to add timezone to both php locations
+Forgot to add $ in fron of where the php_path1,2 variables were used 
+** Fixed indentation
 
-** Configure other VMs to feed data into Icinga 
+** Fixed bug in heredocs postfix configuration
+Postfix configuration was being entered into the configuration file
+with quotes around it. Too much indentation on the first of heredocs
+has revealed the mistake.
+
+* TODO Configure other VMs to feed data into Icinga 
+
 
 * DONE Learning Git basics to put scripts in a repo
   CLOSED: [2019-12-16 Mon 20:39]
@@ -475,12 +483,14 @@ working with other people, as it will make it easier for people to
 accept my pull requests. After running the command the changes are
 uploaded and we can see them being moved to the remote server.
 * Extras
-** Forgot how to connect to a remote server with emacs
+** DONE Forgot how to connect to a remote server with emacs
+   CLOSED: [2019-12-25 Wed 17:46]
 tramp and then edit a file as root using sudo to elevate
 your privileges you need to re-open file like this:
 /ssh:icinga|sudo:icinga:/etc/configfile.conf
 
-** Had to learn MySQL basics to check if databases are loaded
+** DONE Had to learn MySQL basics to check if databases are loaded
+   CLOSED: [2019-12-25 Wed 17:46]
 # Showing existing databases:
 show databases;
 # Creating a new database:
@@ -513,7 +523,8 @@ SHOW TABLES;
 
 #  LocalWords:  VARCHAR
 **** In the end used `mysqlshow | wc -l`
-** To pipe output of a command that receives heredocs
+** DONE To pipe output of a command that receives heredocs
+   CLOSED: [2019-12-25 Wed 17:46]
 we put the pipe after <<EOF, like in this example:
 tac <<EOF | awk '{print "awk saw: "$0}'
 one
@@ -610,7 +621,8 @@ that will let the installation wizard act accordingly to the program's
 version and also signal an easy to understand error (explaining that
 the value is not a known icinga value).
 
-** Change wagrant to use cache
+** DONE Change wagrant to use cache
+   CLOSED: [2019-12-25 Wed 17:46]
 To avoid annoying wait time everytime wagrant was run, I've made it
 create a cache file ~/.globvag. If the file is older than 1800
 seconds, wagrant will re-run `vagrant global-status`. The line
@@ -618,7 +630,8 @@ if [[ ! (`stat --format=%Y $file` -le $(( `date +%s` - 1800 )) ) ]]
 comes from stack overflow question about how to do something if a file
 is more than 30 minutes old, found at:
 https://stackoverflow.com/a/2005658
-** Change update_ssh_config.sh to use cached servers list
+** DONE Change update_ssh_config.sh to use cached servers list
+   CLOSED: [2019-12-25 Wed 17:46]
 *** Finding out how to use sed to delete old entries.
 Trying to prepare proper sed expression to match everything between
 the Vagrant Projects Start and End comment lines.
