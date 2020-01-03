@@ -179,5 +179,19 @@ icingacli setup token create
 systemctl restart httpd
 
 # Use the browser to configure the app, then press space
-read -n1 -r -p "Open http://10.23.45.30/icingaweb2/setup. Press space to continue..." key
+read -n1 -r -p "Open http://10.23.45.30/icingaweb2/setup. \
+Press space to continue..." key
 echo "$key"
+
+# Comment out default web-server check for localhost
+##First backup hosts.conf if not backed up last hour
+conf_loc="/etc/icinga2/conf.d/hosts.conf"
+if [[ ! ( -e ${conf_loc}.$(($(date +%s)/60*60)) ) ]]; then
+   cp $conf_loc $conf_loc.$(($(date +%s)/60*60))
+fi
+sed -Ei "/^\s*vars\.http.*http/,+2 s/^\ \ /&\/\//" $conf_loc
+# Uncomment IcingaWeb check
+sed -Ei "/^\s*\/\/\s*vars\.http.*Icinga/,+2 s/\/\///" $conf_loc
+# Restart Icinga service to reload config files.
+systemctl restart icinga2.service
+

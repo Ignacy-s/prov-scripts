@@ -379,7 +379,7 @@ documentation and what's on Icinga web-page. Other than that tho, I
 haven't found any difference in Icinga installation.
 
 ** Trying to implement the differences in newer Icinga Web installation
-Usage of php 7.3 from SCL repo changes things a little bit. Will have
+Usage of php 7.1 from SCL repo changes things a little bit. Will have
 to run the script several times to make sure that everything
 works. Would be best with a clean VM, without regular php. Required
 php packages will be pulled by Icinga installation. I'm not sure where
@@ -397,8 +397,46 @@ Postfix configuration was being entered into the configuration file
 with quotes around it. Too much indentation on the first of heredocs
 has revealed the mistake.
 
-* TODO Configure other VMs to feed data into Icinga 
+** Script works until setting up icinga web.
+** Coment/uncomment in icinga's hosts.conf
+*** why:
+In the file that configures what is being checked for which host,
+there are lines responsible for monitoring the web server from
+outside. After installation of icinga web, the 3 lines should be
+commented and 3 lines that check for a web server hosting icinga
+should be uncommented. 
+*** Using sed to {un,}comment the lines
+# First backup hosts.conf if not backed up last hour
+conf_loc="/etc/icinga2/conf.d/hosts.conf"
+if [ -e ${conf_loc}.$(($(date +%s)/60*60)) ]; then
+else cp conf_loc conf_loc.$(($(date +%s)/60*60))
+fi
+sed -Ei "/^vars\.http.*http/,+2 s/^/\/\//" $conf_loc
+*** Had to add a space to the regexp 
+The reg exp worked when I tested it in shell. It didn't work the
+second time. A space was at fault. After adding \s at the beginning,
+after the caret sign, it started working again. The new regexp is
+this:
+sed -Ei "/^\s*vars\.http.*http/,+2 s/^/\/\//" $conf_loc
+Here the \s means a whitespace character. It can be a space ( ), tab
+\t, or one more option that I didn't remember. * means that it can
+occur any number of times, including 0.
+*** Learning how to make sed put the comments AFTER the indentation
+Want to check online docs before I ask in #bash.
+https://www.gnu.org/software/sed/manual/html_node/Regular-Expressions.html
+s/^[X[:space:]]*/&\/\/ (Without the 'X')
+The [ [:space:]]* matches any number of spaces at the beginning and &
+references the whole matched part of the line aka pattern space in sed
+talk.
+However, this will put the slashes like that
+  //
+    //
+  //
+Which is ugly. I want them to be at the same distance from the margin,
+so they will just be put after two spaces.
+sed -E "/^\s*vars\.http.*http/,+2 s/^\ \ /&\/\//" $conf_loc
 
+* TODO Configure other VMs to feed data into Icinga 
 
 * DONE Learning Git basics to put scripts in a repo
   CLOSED: [2019-12-16 Mon 20:39]
