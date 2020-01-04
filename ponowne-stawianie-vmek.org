@@ -399,6 +399,22 @@ has revealed the mistake.
 
 ** Script works until setting up icinga web.
 ** Coment/uncomment in icinga's hosts.conf
+** DONE Icinga host server doesn't show up.
+   CLOSED: [2020-01-04 Sat 18:44]
+The reason for the server not showing up is a difference in
+configuration. The new configuration wizard WILL NOT, if re-run,
+re-instate loading of configuration files from config directory conf.d
+in /etc/icinga2. As a consequence, the files in conf.d wont' be
+read. I wonder what was the reason to add that option and to set it as
+the default action.
+
+Have to reinstall icinga and check if it works if the wizard config in
+the script is fixed.
+
+It works now, after modifying the setup wizard to send an 'n' instead
+of the last enter.
+
+
 *** why:
 In the file that configures what is being checked for which host,
 there are lines responsible for monitoring the web server from

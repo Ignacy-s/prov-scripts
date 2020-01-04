@@ -162,9 +162,10 @@ n
 
 
 
-
+n
 EOF
-##That is we answer n, and 6 times enter to accept defaults
+	##That is we answer n, 5 times enter to accept defaults,
+	##And very important!! DON"T DISABLE including conf.d/ files
     else echo "Icinga Config-Wizard already run."
     fi
 else echo "Unknown Icinga version: ${icinga_ver}."
@@ -175,18 +176,18 @@ fi
 systemctl enable --now icinga2.service
 
 # Configure the Web Front-End
-icingacli setup token create
-systemctl restart httpd
-
-# Use the browser to configure the app, then press space
-read -n1 -r -p "Open http://10.23.45.30/icingaweb2/setup. \
+icingacli setup token create && {
+    systemctl restart httpd
+    # Use the browser to configure the app, then press space
+    read -n1 -r -p "Open http://10.23.45.30/icingaweb2/setup. \
 Press space to continue..." key
-echo "$key"
+    echo "$key"
+} || echo "Setup has already been run."
 
 # Comment out default web-server check for localhost
 ##First backup hosts.conf if not backed up last hour
 conf_loc="/etc/icinga2/conf.d/hosts.conf"
-if [[ ! ( -e ${conf_loc}.$(($(date +%s)/60*60)) ) ]]; then
+if [[ ! ( -e ${conf_loc}.$(($(date +%s)/60*60)) ) ]] ; then
    cp $conf_loc $conf_loc.$(($(date +%s)/60*60))
 fi
 sed -Ei "/^\s*vars\.http.*http/,+2 s/^\ \ /&\/\//" $conf_loc
