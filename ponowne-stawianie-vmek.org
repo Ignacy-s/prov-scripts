@@ -362,7 +362,8 @@ After icinga upgraded itself to 2.11, there are some issues. The line
 enabling the scl repository is not enough :(
 
 *** Development of this version is paused, moving to icinga 2.11
-* Icinga (with Icinga Web 2.11
+* DONE Icinga (with Icinga Web 2.11
+  CLOSED: [2020-01-04 Sat 20:06]
 While installing the Icinga I've encountered some problems, mainly:
 Icinga will update itself to version 2.11, which changes many
 things. Most important is that Icinga Web 2.11 requires new version of
@@ -399,7 +400,21 @@ has revealed the mistake.
 
 ** Script works until setting up icinga web.
 ** Coment/uncomment in icinga's hosts.conf
-*** why:
+** DONE Icinga host server doesn't show up.
+   CLOSED: [2020-01-04 Sat 18:44]
+The reason for the server not showing up is a difference in
+configuration. The new configuration wizard WILL NOT, if re-run,
+re-instate loading of configuration files from config directory conf.d
+in /etc/icinga2. As a consequence, the files in conf.d wont' be
+read. I wonder what was the reason to add that option and to set it as
+the default action.
+
+Have to reinstall icinga and check if it works if the wizard config in
+the script is fixed.
+
+It works now, after modifying the setup wizard to send an 'n' instead
+of the last enter.
+** why:
 In the file that configures what is being checked for which host,
 there are lines responsible for monitoring the web server from
 outside. After installation of icinga web, the 3 lines should be
@@ -434,9 +449,16 @@ However, this will put the slashes like that
   //
 Which is ugly. I want them to be at the same distance from the margin,
 so they will just be put after two spaces.
-sed -E "/^\s*vars\.http.*http/,+2 s/^\ \ /&\/\//" $conf_loc
-
+sed -E "/^\s*vars\.http.*http/,+2 s/^\ \ /&\/\//" $conf_
 * TODO Configure other VMs to feed data into Icinga 
+** Configure checks on osticket:
+*** Add osticket in hosts.conf file
+**** Add the basic Host info to hosts.conf
+sudo nano /etc/icinga2/conf.d/hosts.confAdd the following lines to the
+bottom of the file and save it.object Host "osticket" {  import
+"generic-host"  address = "10.23.45.20"  vars.os = "Linux"}
+
+
 
 * DONE Learning Git basics to put scripts in a repo
   CLOSED: [2019-12-16 Mon 20:39]
