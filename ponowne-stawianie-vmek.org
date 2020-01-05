@@ -414,7 +414,13 @@ the script is fixed.
 
 It works now, after modifying the setup wizard to send an 'n' instead
 of the last enter.
+<<<<<<< HEAD
 ** why:
+=======
+
+
+*** why:
+>>>>>>> 437bd2f4aa82587c7f787a193cfa0418ead945dd
 In the file that configures what is being checked for which host,
 there are lines responsible for monitoring the web server from
 outside. After installation of icinga web, the 3 lines should be
