@@ -168,7 +168,8 @@ After getting frustrated I've started digging at the problem and
 stopped taking regular brakes and documenting tried solutions. Being
 tired and not documenting what I've been doing might have added to the
 reasons why the error took couple days to fix.
-* Icinga (with Icinga Web 2.4)
+* DONE Icinga (with Icinga Web 2.4)
+  CLOSED: [2020-01-05 Sun 20:17]
 With icinga not only the web-app has to be installed, but also other
 VMs have to be configured to feed Icinga with data. 
 ** Install Icinga server and web-app.
@@ -456,10 +457,11 @@ However, this will put the slashes like that
 Which is ugly. I want them to be at the same distance from the margin,
 so they will just be put after two spaces.
 sed -E "/^\s*vars\.http.*http/,+2 s/^\ \ /&\/\//" $conf_
-* TODO Configure other VMs to feed data into Icinga 
+* Configure other VMs to feed data into Icinga 
 ** Configure checks on osticket:
 *** Add osticket in hosts.conf file
-**** Add the basic Host info to hosts.conf
+**** DONE Add the basic Host info to hosts.conf
+     CLOSED: [2020-01-05 Sun 20:18]
 sudo nano /etc/icinga2/conf.d/hosts.confAdd the following lines to the
 bottom of the file and save it.object Host "osticket" {  import
 "generic-host"  address = "10.23.45.20"  vars.os = "Linux"}
@@ -602,7 +604,8 @@ This prints:
 awk saw: three
 awk saw: two
 awk saw: one
-** Different versions of Icinga and identifying them
+** DONE Different versions of Icinga and identifying them
+   CLOSED: [2020-01-05 Sun 20:18]
 Sometimes Icinga will update itself from 2.4 to 2.11. This results in
 some differences in the way app works that require addressing.
 
