@@ -467,6 +467,38 @@ bottom of the file and save it.object Host "osticket" {  import
 "generic-host"  address = "10.23.45.20"  vars.os = "Linux"}
 
 
+** Prepare the server for the client 
+*** Create a ticket with icinga for osticket
+sudo icinga2 pki ticket --cn 'osticket'
+*** Install icinga client on Osticket server
+**** Install Icinga repo
+yum install -y https://packages.icinga.com/epel/icinga-rpm-release-7-latest.noarch.rpm
+**** Install epel (was installed on Osticket)
+yum install -y epel-release
+**** Install Icinga and Nagios plugins
+yum install -y icinga2 nagios-plugins-all
+**** TODO Run Icinga node wizard
+sudo icinga2 node wizard <<EOF
+ent
+ent
+icinga
+ent
+10.23.45.30
+ent
+ent
+y
+<ticket from icinga>
+ent
+ent
+y
+y
+ent (local zone name: osticket)
+ent (parent zone name: master)
+ent (don't specify additional global zones)
+n (because I don't want to disable the inclusion of conf.d directory)
+EOF
+**** Enable Icinga
+systemctl enable --now icinga2
 
 * DONE Learning Git basics to put scripts in a repo
   CLOSED: [2019-12-16 Mon 20:39]
@@ -813,3 +845,12 @@ Now the value written is correct, and there wont be another case with
 double start lines.
 
 **** Everything works fine. Changed script's description.
+** Learned how to use commit signing (git commit -S)
+*** First looked for tutorials. Github's tutorial was easiest to follow.
+I found it when clicked "verified" tag on a commit in some project's
+commit history.
+*** Generated a new key
+The passphrase was most difficult to get, because gpg's password
+strength tester didn't like my long letter only passwords.
+*** Added the new key hash as a git --global config variable.
+*** Added the new 
