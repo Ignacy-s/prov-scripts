@@ -466,7 +466,6 @@ sudo nano /etc/icinga2/conf.d/hosts.confAdd the following lines to the
 bottom of the file and save it.object Host "osticket" {  import
 "generic-host"  address = "10.23.45.20"  vars.os = "Linux"}
 
-
 ** Prepare the server for the client 
 *** Create a ticket with icinga for osticket
 sudo icinga2 pki ticket --cn 'osticket'
@@ -477,7 +476,7 @@ yum install -y https://packages.icinga.com/epel/icinga-rpm-release-7-latest.noar
 yum install -y epel-release
 **** Install Icinga and Nagios plugins
 yum install -y icinga2 nagios-plugins-all
-**** TODO Run Icinga node wizard
+**** Run Icinga node wizard && enable Icinga
 sudo icinga2 node wizard <<EOF
 ent
 ent
@@ -497,8 +496,88 @@ ent (parent zone name: master)
 ent (don't specify additional global zones)
 n (because I don't want to disable the inclusion of conf.d directory)
 EOF
-**** Enable Icinga
 systemctl enable --now icinga2
+**** Add additional monitors for the client on the server
+On Icinga server edit /etc/icinga2/zones.conf:
+appent the following to the end of the file:
+
+object Endpoint "osticket" {
+  host = "10.23.45.20"
+}
+
+object Zone "osticke" {
+  endpoints = [ "osticket" ]
+  parent = NodeName
+}
+
+And the following to /etc/icinga2/conf.d/hosts.conf:
+
+object Service "load" {
+  import "generic-service"
+  check_command = "load"
+  host_name = "osticket"
+  command_endpoint = "osticket"
+}
+
+The above creates a new service check called load. It imports the
+default configuration for service type objects with import
+"generic-service". The load command is probably some icinga or nagios
+predefined check. The check is run on the machine osticket, and
+because we want to check something that's inside of the machine, we
+tell icinga to run the check from a special endpoint that is in this
+case the osticket machine itself.
+
+After modifying the files we need to restart the icinga service.
+**** Config error - command_endpoint = "osticket"
+Something wrong with this specific line in hosts.conf
+
+I've commented the line telling icinga to run the load test from
+within osticket. Suprisingly enough, the test worked.
+
+Well, the test worked, but the results were the same for both icinga
+and osticket. In web UI it even said that the test's source was
+icinga. There was another config file edited today, and it was done on
+the bus. I've made a typo and when defining osticket zone, I've
+misspelled osticket like this:
+object Zone "osticke" {
+  endpoints = [ "osticket" ]
+  parent = NodeName
+}
+
+**** TODO Error must be in the zones.conf file
+During the wizard I've noticed creation of new zones, which was absent
+in the old version of the satellite configuration wizard. I guess that
+the issue is there.
+
+When running config validation with icinga daemon -C, debugger points
+at the line 'parent = NodeName' in /etc/icinga2/zones.conf:
+object Zone "osticket" {
+  endpoints = [ "osticket" ]
+??  parent = NodeName
+}
+critical/config: Error: Validation failed for object 'osticket' of
+type 'Zone'; Attribute 'parent': Object 'icinga' of type 'Zone' does
+not exist.
+       
+In the newest version, what probably used to be called "icinga" zone,
+doesn't exist. There is a zone with an endpoint "icinga" in it, but
+it's called master. I will substitute NodeName (that auto changes into
+icinga, as I've read in the comments in hosts.conf) with "master" and
+see what happens.
+
+**** Error with osticket load service.
+[2020-01-07 16:55:04 -0500] critical/config: Error: Validation failed
+ for object 'osticket!load' of type 'Service'; Attribute
+ 'command_endpoint': Checkable with command endpoint requires a
+ zone. Please check the troubleshooting documentation.  Location: in
+ /etc/icinga2/conf.d/hosts.conf: 61:1-61:21
+ /etc/icinga2/conf.d/hosts.conf(59): }
+ /etc/icinga2/conf.d/hosts.conf(60):
+ /etc/icinga2/conf.d/hosts.conf(61): object Service "load" {
+ ^^^^^^^^^^^^^^^^^^^^^ /etc/icinga2/conf.d/hosts.conf(62): import
+ "generic-service"
+
+
 
 * DONE Learning Git basics to put scripts in a repo
   CLOSED: [2019-12-16 Mon 20:39]
@@ -845,7 +924,8 @@ Now the value written is correct, and there wont be another case with
 double start lines.
 
 **** Everything works fine. Changed script's description.
-** Learned how to use commit signing (git commit -S)
+** DONE Learned how to use commit signing (git commit -S)
+   CLOSED: [2020-01-07 Tue 22:09]
 *** First looked for tutorials. Github's tutorial was easiest to follow.
 I found it when clicked "verified" tag on a commit in some project's
 commit history.
@@ -854,3 +934,20 @@ The passphrase was most difficult to get, because gpg's password
 strength tester didn't like my long letter only passwords.
 *** Added the new key hash as a git --global config variable.
 *** Added the new 
+** Disk alert from Icinga
+There is an annoying alert saying that space on /vagrant partition is
+critically low. /vagrant is where the host vagrant project directory
+is mounted.
+To avoid receiving that alert we can tell icinga to ignore the
+/vagrant partition, by modifying the osticket Host stanza in
+hosts.conf on master server:
+  vars.disk_partitions_excluded = [ "/vagrant" ]
+
+full stanza looks like this:
+object Host "osticket" {
+  import "generic-host"
+  address = "10.23.45.20"
+  vars.os = "Linux"
+  vars.disk_partitions_excluded = [ "/vagrant" ]
+
+}
