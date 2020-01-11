@@ -593,7 +593,6 @@ replacement boss in cases where the master is down or unavailable.
 The proper setup would have Osticket as the agent, as there was no
 intention for it to forward commands to other instances.
 
-
 * DONE Learning Git basics to put scripts in a repo
   CLOSED: [2019-12-16 Mon 20:39]
 ** Most basic Git commands.
@@ -676,6 +675,12 @@ a one small change to the project. It is especially important when
 working with other people, as it will make it easier for people to
 accept my pull requests. After running the command the changes are
 uploaded and we can see them being moved to the remote server.
+** Solving git push conflict with git push --force
+I amended a git commit, because a file was renamed but the renamed
+file wasn't added to git. This created a conflict of delete/rename
+type. The error suggested reading manual at `git push --help`. There I
+found an option to `--force` a push, which worked.
+
 * Extras
 ** DONE Forgot how to connect to a remote server with emacs
    CLOSED: [2019-12-25 Wed 17:46]
