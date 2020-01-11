@@ -497,7 +497,7 @@ ent (don't specify additional global zones)
 n (because I don't want to disable the inclusion of conf.d directory)
 EOF
 systemctl enable --now icinga2
-**** Add additional monitors for the client on the server
+** Add additional monitors for the client on the server
 On Icinga server edit /etc/icinga2/zones.conf:
 appent the following to the end of the file:
 
@@ -528,7 +528,7 @@ tell icinga to run the check from a special endpoint that is in this
 case the osticket machine itself.
 
 After modifying the files we need to restart the icinga service.
-**** Config error - command_endpoint = "osticket"
+** Config error - command_endpoint = "osticket"
 Something wrong with this specific line in hosts.conf
 
 I've commented the line telling icinga to run the load test from
@@ -544,7 +544,7 @@ object Zone "osticke" {
   parent = NodeName
 }
 
-**** TODO Error must be in the zones.conf file
+*** TODO Error must be in the zones.conf file
 During the wizard I've noticed creation of new zones, which was absent
 in the old version of the satellite configuration wizard. I guess that
 the issue is there.
@@ -565,7 +565,7 @@ it's called master. I will substitute NodeName (that auto changes into
 icinga, as I've read in the comments in hosts.conf) with "master" and
 see what happens.
 
-**** Error with osticket load service.
+*** Error with osticket load service.
 [2020-01-07 16:55:04 -0500] critical/config: Error: Validation failed
  for object 'osticket!load' of type 'Service'; Attribute
  'command_endpoint': Checkable with command endpoint requires a
@@ -577,6 +577,21 @@ see what happens.
  ^^^^^^^^^^^^^^^^^^^^^ /etc/icinga2/conf.d/hosts.conf(62): import
  "generic-service"
 
+
+
+* Reading Icinga documentation to understand Zones problem
+https://icinga.com/docs/icinga2/latest/doc/06-distributed-monitoring/#distributed-monitoring-setup-agent-satellite
+There are links to other places in Icinga docs. CLI and Installation
+are another places that came to my attention.
+** Distributed Monitoring
+*** Satellites are not Agents!
+I've configured Icinga to be the master and Osticket to be the
+satellite. However, it seems that the satellite is not a "client" in
+this setup. It's more of a command forwarder and servers as a
+replacement boss in cases where the master is down or unavailable.
+
+The proper setup would have Osticket as the agent, as there was no
+intention for it to forward commands to other instances.
 
 
 * DONE Learning Git basics to put scripts in a repo
