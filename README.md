@@ -11,8 +11,11 @@
    - bootme.sh $vm-name* [$vm-name*]
    booting up all the VMs that are being worked on
    - update_ssh_config.sh
-   updating information in ~/.ssh/config to facilitate usage of `ssh` or
-   `emacs-tramp` with the machine names instead of IPs and Ports.
+   updating information in ~/.ssh/config with credentials of active VMs
+   to facilitate usage of `ssh` or `emacs-tramp` with the machine names
+   instead of IPs and Ports.
+   
+   \**vm-name is the name of the vagrant project directory*
 
 ## restoring-VMs.org
 This is an emacs org file that contains journal style documentation of my efforts to redeploy (and automate this redeployment of) Osticket, Kanboard and Icinga. 
